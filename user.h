@@ -24,6 +24,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int trace(int);
+int answer(void); // fabianvm Lab2 ej3
 
 // ulib.c
 int stat(const char*, struct stat*);

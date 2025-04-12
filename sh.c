@@ -74,13 +74,21 @@ runcmd(struct cmd *cmd)
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       exit();
-    printf(2, "exec not implemented\n");
+      exec(ecmd->argv[0],ecmd->argv);
     break;
 
   case REDIR:
-    printf(2, "redir not implemented\n");
-    //rcmd = (struct redircmd*)cmd;
-    //runcmd(rcmd->cmd);
+    rcmd = (struct redircmd*)cmd;
+    int fd = open(rcmd->file,rcmd->mode); //solo acepta estos 2 argumentos
+    if(fd < 0){
+        printf("Error %s\n", "open"); //no tiene perror()
+        exit(); //no necesita argumentos
+    }
+    close(rcmd->fd); // cerrar entrada o salida
+    dup(fd); // poner el archivo abierto en la entrada o salida
+    close(fd); // ya no se necesita
+
+    runcmd(rcmd->cmd);
     break;
 
   case LIST:

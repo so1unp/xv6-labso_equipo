@@ -100,3 +100,9 @@ sys_trace(void)
     return 0;
 }
 
+// fabianvm Lab2 ej3
+int 
+sys_answer(void)
+{
+  return 42; 
+}
