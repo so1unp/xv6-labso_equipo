@@ -81,13 +81,17 @@ runcmd(struct cmd *cmd)
     rcmd = (struct redircmd*)cmd;
     int fd = open(rcmd->file,rcmd->mode); //solo acepta estos 2 argumentos
     if(fd < 0){
-        printf("Error %s\n", "open"); //no tiene perror()
-        exit(); //no necesita argumentos
+      printf("Error %s\n", "open"); //no tiene perror()
+      exit(); //no necesita argumentos
     }
     close(rcmd->fd); // cerrar entrada o salida
-    dup(fd); // poner el archivo abierto en la entrada o salida
+    if (dup(fd)< 0) // poner el archivo abierto en la entrada o salida
+    {
+      printf("Error %s\n", "dup");
+      close(fd);
+      exit();
+    }
     close(fd); // ya no se necesita
-
     runcmd(rcmd->cmd);
     break;
 
@@ -98,9 +102,30 @@ runcmd(struct cmd *cmd)
     break;
 
   case PIPE:
-    printf(2, "pipe not implemented\n");
-    //pcmd = (struct pipecmd*)cmd;
-    //runcmd(pcmd->left);
+    pcmd = (struct pipecmd*)cmd;
+    int pfd[2];
+    if ( pipe(pfd)<0){
+        printf("Error %s\n", "pipe");
+        exit();
+    }
+    // pid izq <- fork
+    if (fork1()== 0){ // escribir en pipe
+        close(1); // cerrar salida estandar
+        dup(pfd[1]);
+        close(pfd[0]);
+        runcmd(pcmd->left);
+    } 
+    // pid der <- fork
+    if (fork1()== 0){ // leer del pipe
+        close(0); // cerrar entrada estandar
+        dup(pfd[0]);  
+        close(pfd[1]);
+        runcmd(pcmd->right);
+    }
+    close(pfd[0]);
+    close(pfd[1]);
+    wait(); // esperar proceso
+    wait(); // esperar proceso
     break;
 
   case BACK:
